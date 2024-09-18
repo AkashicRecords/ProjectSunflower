@@ -11,10 +11,22 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Install Python packages individually with --no-deps
-RUN pip install --no-cache-dir --no-deps fastapi==0.114.2 && \
-    pip install --no-cache-dir --no-deps uvicorn==0.24.0 && \
-    pip install --no-cache-dir --no-deps sqlalchemy==2.0.25
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    libc-dev \
+    libsndfile1 \
+    portaudio19-dev \
+    python3-pyaudio \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download spaCy model
+RUN python -m spacy download en_core_web_sm
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
